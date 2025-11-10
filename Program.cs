@@ -75,6 +75,19 @@ namespace LabWork
         private string _position;
         private DateTime _hireDate;
 
+        public PracivnykFirmy() { }
+
+        public PracivnykFirmy(string lastName, string firstName, string university,
+                              string school, string position, DateTime hireDate)
+        {
+            LastName = lastName;
+            FirstName = firstName;
+            University = university;
+            _graduatedSchool = school;
+            _position = position;
+            _hireDate = hireDate.Date;
+        }
+
         private static DateTime ReadDate(string prompt)
         {
             string[] formats = { "yyyy-MM-dd", "dd.MM.yyyy" };
@@ -90,7 +103,7 @@ namespace LabWork
             }
         }
 
-        private void Experience(out int y, out int m, out int d)
+        private void CalculateExperience(out int y, out int m, out int d)
         {
             var now = DateTime.Today;
             if (now < _hireDate) { y = m = d = 0; return; }
@@ -129,7 +142,7 @@ namespace LabWork
             Console.WriteLine($"ВНЗ: {University}");
             Console.WriteLine($"Закінчив: {_graduatedSchool}");
             Console.WriteLine($"Дата прийому: {_hireDate:yyyy-MM-dd}");
-            Experience(out int y, out int m, out int d);
+            CalculateExperience(out int y, out int m, out int d);
             Console.WriteLine($"Стаж роботи: {y} р. {m} міс. {d} дн.");
             Console.WriteLine($"Симетричне прізвище: {(IsSym(LastName) ? "Так" : "Ні")}");
         }
@@ -152,6 +165,7 @@ namespace LabWork
         }
     }
 }
+
 
     }
 }
