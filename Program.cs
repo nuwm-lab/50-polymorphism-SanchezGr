@@ -31,7 +31,7 @@ namespace LabWork
                     }
                 }
                 if (ok) return s;
-                Console.WriteLine("Помилка вводу.");
+                Console.WriteLine("Помилка: дозволені лише літери, пробіл, дефіс, апостроф.");
             }
         }
 
@@ -56,8 +56,8 @@ namespace LabWork
 
         public virtual void InputMain()
         {
-            LastName  = ReadLetters("Прізвище практиканта: ");
-            FirstName = ReadLetters("Ім'я практиканта: ");
+            LastName   = ReadLetters("Прізвище практиканта: ");
+            FirstName  = ReadLetters("Ім'я практиканта: ");
             University = ReadLetters("ВНЗ: ");
         }
 
@@ -71,9 +71,9 @@ namespace LabWork
 
     public class PracivnykFirmy : Praktykant
     {
-        private string GraduatedSchool;
-        private string Position;
-        private DateTime HireDate;
+        private string _graduatedSchool;
+        private string _position;
+        private DateTime _hireDate;
 
         private static DateTime ReadDate(string prompt)
         {
@@ -86,18 +86,18 @@ namespace LabWork
                                            DateTimeStyles.None, out var dt))
                     return dt.Date;
 
-                Console.WriteLine("Неправильний формат дати.");
+                Console.WriteLine("Неправильний формат дати. Приклади: 2023-09-01 або 01.09.2023");
             }
         }
 
         private void Experience(out int y, out int m, out int d)
         {
             var now = DateTime.Today;
-            if (now < HireDate) { y = m = d = 0; return; }
+            if (now < _hireDate) { y = m = d = 0; return; }
 
-            y = now.Year - HireDate.Year;
-            m = now.Month - HireDate.Month;
-            d = now.Day - HireDate.Day;
+            y = now.Year - _hireDate.Year;
+            m = now.Month - _hireDate.Month;
+            d = now.Day - _hireDate.Day;
 
             if (d < 0)
             {
@@ -114,21 +114,21 @@ namespace LabWork
 
         public override void InputMain()
         {
-            LastName  = ReadLetters("Прізвище працівника: ");
-            FirstName = ReadLetters("Ім'я працівника: ");
+            LastName   = ReadLetters("Прізвище працівника: ");
+            FirstName  = ReadLetters("Ім'я працівника: ");
             University = ReadLetters("ВНЗ: ");
-            GraduatedSchool = ReadLetters("Заклад, який закінчив: ");
-            Position = ReadLetters("Посада: ");
-            HireDate = ReadDate("Дата прийому (yyyy-MM-dd): ");
+            _graduatedSchool = ReadLetters("Заклад, який закінчив: ");
+            _position       = ReadLetters("Посада: ");
+            _hireDate       = ReadDate("Дата прийому (yyyy-MM-dd або dd.MM.yyyy): ");
         }
 
         public override void Show()
         {
             Console.WriteLine($"\nПрацівник фірми: {FirstName} {LastName}");
-            Console.WriteLine($"Посада: {Position}");
+            Console.WriteLine($"Посада: {_position}");
             Console.WriteLine($"ВНЗ: {University}");
-            Console.WriteLine($"Закінчив: {GraduatedSchool}");
-            Console.WriteLine($"Дата прийому: {HireDate:yyyy-MM-dd}");
+            Console.WriteLine($"Закінчив: {_graduatedSchool}");
+            Console.WriteLine($"Дата прийому: {_hireDate:yyyy-MM-dd}");
             Experience(out int y, out int m, out int d);
             Console.WriteLine($"Стаж роботи: {y} р. {m} міс. {d} дн.");
             Console.WriteLine($"Симетричне прізвище: {(IsSym(LastName) ? "Так" : "Ні")}");
@@ -140,11 +140,11 @@ namespace LabWork
         public static void Main()
         {
             Console.Write("Оберіть режим (1 — працівник, 2 — практикант): ");
-            string userChoose = Console.ReadLine();
+            string choose = (Console.ReadLine() ?? "").Trim();
 
             Praktykant obj;
-            if (userChoose == "1") obj = new PracivnykFirmy();
-            else if (userChoose == "2") obj = new Praktykant();
+            if (choose == "1") obj = new PracivnykFirmy();
+            else if (choose == "2") obj = new Praktykant();
             else { Console.WriteLine("Невірний вибір."); return; }
 
             obj.InputMain();
