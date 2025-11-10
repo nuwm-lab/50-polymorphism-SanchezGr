@@ -1,13 +1,14 @@
 using System;
 using System.Globalization;
+using System.Text;
 
 namespace LabWork
 {
-    class Praktykant
+    public class Praktykant
     {
-        protected string prizv;
-        protected string imya;
-        protected string vuz;
+        public string LastName  { get; protected set; }
+        public string FirstName { get; protected set; }
+        public string University { get; protected set; }
 
         protected static string ReadLetters(string prompt)
         {
@@ -15,102 +16,144 @@ namespace LabWork
             {
                 Console.Write(prompt);
                 string s = (Console.ReadLine() ?? "").Trim();
-                if (s.Length == 0) { Console.WriteLine("Введіть дані."); continue; }
+                if (string.IsNullOrWhiteSpace(s))
+                {
+                    Console.WriteLine("Введіть дані.");
+                    continue;
+                }
+
                 bool ok = true;
                 foreach (char c in s)
-                    if (!(char.IsLetter(c) || c == ' ' || c == '-' || c == '\'' || c == '’')) { ok = false; break; }
+                {
+                    if (!(char.IsLetter(c) || c == ' ' || c == '-' || c == '\'' || c == '’'))
+                    {
+                        ok = false; break;
+                    }
+                }
                 if (ok) return s;
                 Console.WriteLine("Помилка: дозволені лише літери, пробіл, дефіс, апостроф.");
             }
         }
 
-        protected bool IsSym(string s)
+        protected static bool IsSym(string s)
         {
             if (string.IsNullOrWhiteSpace(s)) return false;
-            string t = "";
-            foreach (char c in s) if (char.IsLetter(c)) t += char.ToLowerInvariant(c);
-            if (t.Length == 0) return false;
-            int l = 0, r = t.Length - 1;
-            while (l < r) { if (t[l] != t[r]) return false; l++; r--; }
+
+            var sb = new StringBuilder(s.Length);
+            foreach (char c in s)
+                if (char.IsLetter(c)) sb.Append(char.ToLowerInvariant(c));
+
+            if (sb.Length == 0) return false;
+
+            int l = 0, r = sb.Length - 1;
+            while (l < r)
+            {
+                if (sb[l] != sb[r]) return false;
+                l++; r--;
+            }
             return true;
         }
 
         public virtual void InputMain()
         {
-            prizv = ReadLetters("Прізвище практиканта: ");
-            imya  = ReadLetters("Ім'я практиканта: ");
-            vuz   = ReadLetters("ВНЗ: ");
+            LastName   = ReadLetters("Прізвище практиканта: ");
+            FirstName  = ReadLetters("Ім'я практиканта: ");
+            University = ReadLetters("ВНЗ: ");
         }
 
         public virtual void Show()
         {
-            Console.WriteLine($"\nПрактикант: {imya} {prizv}");
-            Console.WriteLine($"ВНЗ: {vuz}");
-            Console.WriteLine($"Симетричне прізвище: {(IsSym(prizv) ? "Так" : "Ні")}");
+            Console.WriteLine($"\nПрактикант: {FirstName} {LastName}");
+            Console.WriteLine($"ВНЗ: {University}");
+            Console.WriteLine($"Симетричне прізвище: {(IsSym(LastName) ? "Так" : "Ні")}");
         }
     }
 
-    class PracivnykFirmy : Praktykant
+    public class PracivnykFirmy : Praktykant
     {
-        private string zaklad;
-        private string posada;
-        private DateTime dataPrijomu;
+        private string _graduatedSchool;
+        private string _position;
+        private DateTime _hireDate;
 
-        static DateTime ReadDate(string prompt)
+        public PracivnykFirmy() { }
+
+        public PracivnykFirmy(string lastName, string firstName, string university,
+                              string school, string position, DateTime hireDate)
+        {
+            LastName = lastName;
+            FirstName = firstName;
+            University = university;
+            _graduatedSchool = school;
+            _position = position;
+            _hireDate = hireDate.Date;
+        }
+
+        private static DateTime ReadDate(string prompt)
         {
             string[] formats = { "yyyy-MM-dd", "dd.MM.yyyy" };
             while (true)
             {
                 Console.Write(prompt);
-                string s = Console.ReadLine();
-                if (DateTime.TryParseExact(s, formats, CultureInfo.InvariantCulture, DateTimeStyles.None, out var dt))
+                string s = (Console.ReadLine() ?? "").Trim();
+                if (DateTime.TryParseExact(s, formats, CultureInfo.InvariantCulture,
+                                           DateTimeStyles.None, out var dt))
                     return dt.Date;
+
                 Console.WriteLine("Неправильний формат дати. Приклади: 2023-09-01 або 01.09.2023");
             }
         }
 
-        void Staj(out int y, out int m, out int d)
+        private void CalculateExperience(out int y, out int m, out int d)
         {
             var now = DateTime.Today;
-            if (now < dataPrijomu) { y = m = d = 0; return; }
-            y = now.Year - dataPrijomu.Year;
-            m = now.Month - dataPrijomu.Month;
-            d = now.Day - dataPrijomu.Day;
-            if (d < 0) { var prev = now.AddMonths(-1); d += DateTime.DaysInMonth(prev.Year, prev.Month); m--; }
-            if (m < 0) { m += 12; y--; }
+            if (now < _hireDate) { y = m = d = 0; return; }
+
+            y = now.Year - _hireDate.Year;
+            m = now.Month - _hireDate.Month;
+            d = now.Day - _hireDate.Day;
+
+            if (d < 0)
+            {
+                var prev = now.AddMonths(-1);
+                d += DateTime.DaysInMonth(prev.Year, prev.Month);
+                m--;
+            }
+            if (m < 0)
+            {
+                m += 12;
+                y--;
+            }
         }
 
         public override void InputMain()
         {
-            // базові поля читаємо з іншими підказками
-            prizv = ReadLetters("Прізвище працівника: ");
-            imya  = ReadLetters("Ім'я працівника: ");
-            vuz   = ReadLetters("ВНЗ: ");
-
-            zaklad = ReadLetters("Заклад, який закінчив: ");
-            posada = ReadLetters("Посада: ");
-            dataPrijomu = ReadDate("Дата прийому (yyyy-MM-dd або dd.MM.yyyy): ");
+            LastName   = ReadLetters("Прізвище працівника: ");
+            FirstName  = ReadLetters("Ім'я працівника: ");
+            University = ReadLetters("ВНЗ: ");
+            _graduatedSchool = ReadLetters("Заклад, який закінчив: ");
+            _position       = ReadLetters("Посада: ");
+            _hireDate       = ReadDate("Дата прийому (yyyy-MM-dd або dd.MM.yyyy): ");
         }
 
         public override void Show()
         {
-            Console.WriteLine($"\nПрацівник фірми: {imya} {prizv}");
-            Console.WriteLine($"Посада: {posada}");
-            Console.WriteLine($"ВНЗ: {vuz}");
-            Console.WriteLine($"Закінчив: {zaklad}");
-            Console.WriteLine($"Дата прийому: {dataPrijomu:yyyy-MM-dd}");
-            Staj(out int y, out int m, out int d);
+            Console.WriteLine($"\nПрацівник фірми: {FirstName} {LastName}");
+            Console.WriteLine($"Посада: {_position}");
+            Console.WriteLine($"ВНЗ: {University}");
+            Console.WriteLine($"Закінчив: {_graduatedSchool}");
+            Console.WriteLine($"Дата прийому: {_hireDate:yyyy-MM-dd}");
+            CalculateExperience(out int y, out int m, out int d);
             Console.WriteLine($"Стаж роботи: {y} р. {m} міс. {d} дн.");
-            Console.WriteLine($"Симетричне прізвище: {(IsSym(prizv) ? "Так" : "Ні")}");
+            Console.WriteLine($"Симетричне прізвище: {(IsSym(LastName) ? "Так" : "Ні")}");
         }
     }
 
-    class Program
+    public class Program
     {
-        static void Main()
+        public static void Main()
         {
             Console.Write("Оберіть режим (1 — працівник, 2 — практикант): ");
-            string choose = Console.ReadLine();
+            string choose = (Console.ReadLine() ?? "").Trim();
 
             Praktykant obj;
             if (choose == "1") obj = new PracivnykFirmy();
@@ -120,5 +163,9 @@ namespace LabWork
             obj.InputMain();
             obj.Show();
         }
+    }
+}
+
+
     }
 }
